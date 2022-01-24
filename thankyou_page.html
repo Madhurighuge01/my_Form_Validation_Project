@@ -1,37 +1,46 @@
 <html>
 	<head></head>
-	<body><center>
-		<h1  style="color:orangered;">Thank You..!!</h1>
-		<p id="message"></p>
-		<input type="number" value="" id="gotp" /><button  onclick="otpvalidate()" style="background-color: skyblue;">Validate</button><br><br>
-		<span id="otp1" style="font-style: italic;  color: darkgoldenrod;font-size: large;"></span>
-		<script>
+	<body>
+		<center>
+			<h1 style="color: orangered">Thank You..!!</h1>
+			<p id="message"></p>
+			<input type="number" value="" id="gotp" /><button onclick="otpvalidate()" style="background-color: skyblue">Validate</button><br /><br />
+			<span id="otp1" style="font-style: italic; color: darkgoldenrod; font-size: large"></span>
+			
+			<script>
+				var data = localStorage.getItem("data");
+				var myData = JSON.parse(data);
+				var para = document.getElementById("message");
+				para.innerText = `Dear ${myData.name}
+								  Thank You for your inquiry. A 4 digit verification number has been sent
+								  to your phone number ${myData.phno}. Please enter in the following box
+								  and submit for confirmation`;
+				console.log(myData.otp);
+				//localStorage.removeItem("data");
+				var attemptNo = 0;
+				var totalAttempt = 3;
+				function otpvalidate() {
+					var generateotp = document.getElementById("gotp").value;
 
-			var data = localStorage.getItem("data");
-			var myData = JSON.parse(data);
-			var para = document.getElementById("message");
-			para.innerText = `Dear ${myData.name} 
-							  Thank You for your inquiry. A 4 digit verification number has been sent
-							  to your phone number ${myData.phno}. Please enter in the following box
-							  and submit for confirmation`;
-			console.log(myData.otp);
-			localStorage.removeItem("data");
-
-			function otpvalidate()
-			{
-			var generateotp=document.getElementById("gotp").value;
-			if(generateotp == myData.otp)
-			{
-				document.getElementById("otp1").innerHTML="Validation Successful..!!";
-				location.replace("project.html");
-			}
-			else{
-				document.getElementById("otp1").innerHTML="Validation failed..!!";
-			}
-		}
-
-		</script>
-
-	</center>
+					if (attemptNo < 3) {
+						if (generateotp == myData.otp) {
+							document.getElementById("otp1").innerHTML =
+								"Validation Successful..!!";
+							location.replace("project.html");
+						} else {
+							attemptNo++;
+							totalAttempt--;
+							if (attemptNo == 3 && generateotp != myData.otp) {
+								location.replace("error.html");
+							} else {
+								document.getElementById(
+									"otp1"
+								).innerHTML = `Validation failed..!! ${totalAttempt} more Attemt`;
+							}
+						}
+					}
+				}
+			</script>
+		</center>
 	</body>
 </html>
