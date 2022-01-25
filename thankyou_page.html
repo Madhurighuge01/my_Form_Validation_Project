@@ -4,9 +4,21 @@
 		<center>
 			<h1 style="color: orangered">Thank You..!!</h1>
 			<p id="message"></p>
-			<input type="number" value="" id="gotp" /><button onclick="otpvalidate()" style="background-color: skyblue">Validate</button><br /><br />
-			<span id="otp1" style="font-style: italic; color: darkgoldenrod; font-size: large"></span>
-			
+			<input
+				type="text"
+				value=""
+				id="gotp"
+				name="gotp"
+				maxlength="4"
+				pattern="^[0-9]{4}$"
+				onfocus="this.value=''"
+			/><button onclick="otpvalidate()" style="background-color: skyblue">
+				Validate</button
+			><br /><br />
+			<span
+				id="otp1"
+				style="font-style: italic; color: darkgoldenrod; font-size: large"
+			></span>
 			<script>
 				var data = localStorage.getItem("data");
 				var myData = JSON.parse(data);
@@ -16,28 +28,31 @@
 								  to your phone number ${myData.phno}. Please enter in the following box
 								  and submit for confirmation`;
 				console.log(myData.otp);
-				//localStorage.removeItem("data");
+				localStorage.removeItem("data");
 				var attemptNo = 0;
 				var totalAttempt = 3;
-				function otpvalidate() {
-					var generateotp = document.getElementById("gotp").value;
+				function otpvalidate()
+				 {
+				var generateotp = document.getElementById("gotp").value;
 
-					if (attemptNo < 3) {
-						if (generateotp == myData.otp) {
-							document.getElementById("otp1").innerHTML =
-								"Validation Successful..!!";
-							location.replace("project.html");
-						} else {
-							attemptNo++;
-							totalAttempt--;
-							if (attemptNo == 3 && generateotp != myData.otp) {
-								location.replace("error.html");
-							} else {
-								document.getElementById(
-									"otp1"
-								).innerHTML = `Validation failed..!! ${totalAttempt} more Attemt`;
+				if (attemptNo < 3 && generateotp > 0) {
+				if (generateotp == myData.otp) {
+				document.getElementById("otp1").innerHTML ="Validation Successful..!!";
+							location.replace("http://pixel6.co");
+						} else 
+						{
+						attemptNo++;
+						totalAttempt--;
+						if (attemptNo == 3 && generateotp != myData.otp) {
+							location.replace("http://pixel6.com");
+						} 
+						else {
+                           document.getElementById("otp1").innerHTML = `Validation failed..!! ${totalAttempt} more Attemt`;
 							}
 						}
+					}
+					if (generateotp.length == 0) {
+						document.getElementById("otp1").innerHTML = "Please enter OTP!";
 					}
 				}
 			</script>
