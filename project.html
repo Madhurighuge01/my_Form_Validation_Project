@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -325,6 +326,7 @@
 
         "use strict";
 
+
         // --------------------------------------------------
         // 1. DOM ELEMENTS
         // --------------------------------------------------
@@ -364,34 +366,29 @@
 
 
         // --------------------------------------------------
-        // 2. CONFIGURATION
+        // 2. STATE CODE MAPPING
         // --------------------------------------------------
 
-        const MAX_OTP_ATTEMPTS = 3;
+        // The next three digits after the mobile prefix
+        // are used as application-specific state identifiers.
+        //
+        // 615 = Maharashtra
+        // 774 = Maharashtra
+        //
+        // These are custom assignment mappings, not official
+        // Indian mobile-number state codes.
 
-        const PIXEL6_URL = "https://pixel6.co/";
+        const states = {
 
-        const PIXEL6_404_URL = "https://pixel6.co/404";
+            "615": "Maharashtra",
 
-
-        // --------------------------------------------------
-        // 3. MOBILE NUMBER STATE MAPPING
-        // --------------------------------------------------
-
-        // These two specific numbers are configured
-        // to display Maharashtra.
-
-        const mobileStateMapping = {
-
-            "9137749098": "Maharashtra",
-
-            "7506157034": "Maharashtra"
+            "774": "Maharashtra"
 
         };
 
 
         // --------------------------------------------------
-        // 4. VALIDATION HELPER FUNCTIONS
+        // 3. VALIDATION HELPER
         // --------------------------------------------------
 
         function showError(elementId, message) {
@@ -416,10 +413,13 @@
 
 
         // --------------------------------------------------
-        // 5. FULL NAME VALIDATION
+        // 4. FULL NAME VALIDATION
         // --------------------------------------------------
 
         function validateName(name) {
+
+            // Require at least two words.
+            // Each word must contain at least four letters.
 
             const namePattern =
                 /^[A-Za-z]+(?: +[A-Za-z]+)+$/;
@@ -442,7 +442,7 @@
 
 
         // --------------------------------------------------
-        // 6. EMAIL VALIDATION
+        // 5. EMAIL VALIDATION
         // --------------------------------------------------
 
         function validateEmail(email) {
@@ -456,7 +456,7 @@
 
 
         // --------------------------------------------------
-        // 7. PHONE NUMBER FORMATTING
+        // 6. PHONE NUMBER FORMATTING
         // --------------------------------------------------
 
         function formatPhoneNumber(digits) {
@@ -493,11 +493,12 @@
 
 
         // --------------------------------------------------
-        // 8. MOBILE PROVIDER DETECTION
+        // 7. MOBILE PROVIDER DETECTION
         // --------------------------------------------------
 
-        // Prefix ranges below are illustrative assignment
-        // rules, not reliable real-world carrier detection.
+        // These ranges follow the original assignment logic.
+        // They do not reliably identify the actual carrier
+        // of a mobile number in India.
 
         function getProvider(firstThreeDigits) {
 
@@ -536,12 +537,12 @@
 
 
         // --------------------------------------------------
-        // 9. PHONE STATE AND PROVIDER INFORMATION
+        // 8. PHONE STATE AND PROVIDER INFORMATION
         // --------------------------------------------------
 
         function updatePhoneInformation(digits) {
 
-            // Wait for the first three digits.
+            // Display a message until three digits are entered.
 
             if (digits.length < 3) {
 
@@ -552,18 +553,18 @@
 
             }
 
+
+            // First three digits determine the provider
+            // according to the assignment's provider mapping.
+
             const provider =
                 getProvider(digits.slice(0, 3));
 
-            // Identify the state using the complete
-            // mobile number configured in our mapping.
-
-            const state =
-                mobileStateMapping[digits] || null;
 
             let information = "";
 
-            // Show provider if identified.
+
+            // Display provider.
 
             if (provider) {
 
@@ -581,9 +582,23 @@
 
             }
 
-            // Show state when all 10 digits are entered.
 
-            if (digits.length === 10) {
+            // Digits 4, 5 and 6 determine the custom state.
+            //
+            // Example:
+            // 7506157034 -> 615 -> Maharashtra
+            // 9137749098 -> 774 -> Maharashtra
+
+            if (digits.length >= 6) {
+
+                const stateCode =
+                    digits.slice(3, 6);
+
+
+                // Look up the state using the three digits.
+
+                const state = states[stateCode];
+
 
                 if (state) {
 
@@ -596,7 +611,7 @@
 
                     information +=
                         '<span class="error">' +
-                        'State not configured for this number.' +
+                        'State code not configured.' +
                         '</span>';
 
                 }
@@ -604,10 +619,10 @@
             } else {
 
                 information +=
-                    '<span> Enter the complete 10-digit number ' +
-                    'to identify the configured state.</span>';
+                    '<span>Enter the next 3 digits to identify the state.</span>';
 
             }
+
 
             phoneInfo.innerHTML = information;
 
@@ -615,18 +630,29 @@
 
 
         // --------------------------------------------------
-        // 10. PHONE INPUT EVENT
+        // 9. PHONE INPUT EVENT
         // --------------------------------------------------
 
         phoneInput.addEventListener("input", function () {
+
+            // Keep digits only and limit to 10 digits.
 
             const digits = this.value
                 .replace(/\D/g, "")
                 .slice(0, 10);
 
+
+            // Format the number.
+
             this.value = formatPhoneNumber(digits);
 
+
+            // Update provider and state information.
+
             updatePhoneInformation(digits);
+
+
+            // Clear the previous phone error.
 
             showError("phoneError", "");
 
@@ -634,12 +660,12 @@
 
 
         // --------------------------------------------------
-        // 11. COMPLETE PHONE NUMBER VALIDATION
+        // 10. COMPLETE PHONE NUMBER VALIDATION
         // --------------------------------------------------
 
         function validatePhone(digits) {
 
-            // Require exactly 10 digits.
+            // Exactly 10 digits are required.
 
             if (!/^\d{10}$/.test(digits)) {
 
@@ -654,10 +680,23 @@
 
             }
 
-            // Look up the state for the complete number.
 
-            const state =
-                mobileStateMapping[digits] || null;
+            // Identify provider.
+
+            const provider =
+                getProvider(digits.slice(0, 3));
+
+
+            // Identify state using digits 4, 5 and 6.
+
+            const stateCode =
+                digits.slice(3, 6);
+
+
+            const state = states[stateCode];
+
+
+            // Reject numbers whose state code is not mapped.
 
             if (!state) {
 
@@ -666,18 +705,15 @@
                     valid: false,
 
                     message:
-                        "This mobile number is not configured. " +
-                        "Please enter an approved number."
+                        "Invalid state code. " +
+                        "Supported codes: 615 and 774."
 
                 };
 
             }
 
-            // Provider detection is optional for validation.
-            // State is based on the explicit number mapping.
 
-            const provider =
-                getProvider(digits.slice(0, 3));
+            // Return validated phone details.
 
             return {
 
@@ -697,12 +733,14 @@
 
 
         // --------------------------------------------------
-        // 12. PERSONAL DETAILS FORM SUBMISSION
+        // 11. PERSONAL DETAILS FORM SUBMISSION
         // --------------------------------------------------
 
         let generatedOTP = null;
 
         let otpAttempts = 0;
+
+        const MAX_OTP_ATTEMPTS = 3;
 
 
         personalForm.addEventListener(
@@ -715,6 +753,7 @@
 
                 let isValid = true;
 
+
                 const fullName =
                     fullNameInput.value.trim();
 
@@ -725,7 +764,7 @@
                     phoneInput.value.replace(/\D/g, "");
 
 
-                // Validate name.
+                // Validate full name.
 
                 if (!validateName(fullName)) {
 
@@ -755,10 +794,11 @@
                 }
 
 
-                // Validate phone.
+                // Validate phone number and state.
 
                 const phoneResult =
                     validatePhone(phoneDigits);
+
 
                 if (!phoneResult.valid) {
 
@@ -772,7 +812,7 @@
                 }
 
 
-                // Stop if any validation fails.
+                // Stop if any field is invalid.
 
                 if (!isValid) {
 
@@ -781,7 +821,7 @@
                 }
 
 
-                // Prepare validated user details.
+                // Store the validated details.
 
                 const userDetails = {
 
@@ -798,10 +838,11 @@
                 };
 
 
-                // Display first name.
+                // Display the first name.
 
                 const firstName =
                     fullName.split(/\s+/)[0];
+
 
                 document.getElementById("greeting").textContent =
                     "Dear " + firstName + ",";
@@ -821,32 +862,28 @@
 
 
                 // Assignment demonstration only.
-                // This is not a real SMS OTP service.
+                // No actual SMS is sent.
 
                 console.log("Generated OTP:", generatedOTP);
 
 
-                // Reset attempts.
+                // Reset OTP attempts.
 
                 otpAttempts = 0;
 
 
-                // Display OTP page.
+                // Show OTP page.
 
                 personalPage.classList.add("hidden");
 
                 thankYouPage.classList.remove("hidden");
-
-                otpInput.value = "";
-
-                otpInput.focus();
 
             }
         );
 
 
         // --------------------------------------------------
-        // 13. OTP INPUT RESTRICTIONS
+        // 12. OTP INPUT RESTRICTIONS
         // --------------------------------------------------
 
         otpInput.addEventListener("input", function () {
@@ -861,7 +898,7 @@
 
 
         // --------------------------------------------------
-        // 14. OTP VALIDATION
+        // 13. OTP VALIDATION
         // --------------------------------------------------
 
         otpForm.addEventListener(
@@ -872,11 +909,12 @@
 
                 showError("otpError", "");
 
+
                 const enteredOTP =
                     otpInput.value;
 
 
-                // Require four digits.
+                // Require exactly four digits.
 
                 if (!/^\d{4}$/.test(enteredOTP)) {
 
@@ -890,9 +928,11 @@
                 }
 
 
-                // Verify OTP.
+                // Compare entered OTP with generated OTP.
 
                 if (enteredOTP === generatedOTP) {
+
+                    // Show success page.
 
                     thankYouPage.classList.add("hidden");
 
@@ -903,33 +943,35 @@
 
                     setTimeout(function () {
 
-                        window.location.href = PIXEL6_URL;
+                        window.location.href =
+                            "https://pixel6.co/";
 
                     }, 3000);
 
                 } else {
 
+                    // Count failed attempts.
+
                     otpAttempts++;
+
 
                     const remainingAttempts =
                         MAX_OTP_ATTEMPTS - otpAttempts;
 
 
-                    // Maximum three incorrect attempts.
-
                     if (otpAttempts >= MAX_OTP_ATTEMPTS) {
+
+                        // Show 404 page after three failures.
 
                         thankYouPage.classList.add("hidden");
 
                         notFoundPage.classList.remove("hidden");
 
 
-                        // Redirect after three seconds.
-
                         setTimeout(function () {
 
                             window.location.href =
-                                PIXEL6_404_URL;
+                                "https://pixel6.co/404";
 
                         }, 3000);
 
@@ -941,6 +983,9 @@
                             remainingAttempts +
                             " attempt(s) remaining."
                         );
+
+
+                        // Clear incorrect OTP.
 
                         otpInput.value = "";
 
@@ -956,4 +1001,5 @@
     </script>
 
 </body>
+
 </html>
